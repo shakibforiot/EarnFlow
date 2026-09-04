@@ -1,0 +1,24 @@
+{
+  "name": "EarnFlow",
+  "short_name": "EarnFlow",
+  "description": "Complete tasks, surveys, and offers. Cash out rewards.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#070a10",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
