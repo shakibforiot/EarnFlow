@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
@@ -14,10 +15,13 @@ export const dynamic = "force-dynamic";
 
 /**
  * Partner offerwall postback / S2S callback.
- * Example:
- *   /api/offerwall/postback?uid=USER_ID&coins=250&txid=ABC&secret=YOUR_SECRET&offer=Survey+XYZ
  *
- * Set OFFERWALL_SECRET in .env (or SiteSettings.offerwallSecret).
+ * AdGem-style:
+ *   /api/offerwall/postback?uid=...&coins=...&txid=...&secret=OFFERWALL_SECRET&offer=...
+ *
+ * PubScale-style:
+ *   /api/offerwall/postback?user_id=...&value=...&token=...&signature=...
+ *   signature = md5(`${PUBSCALE_SECRET}.${user_id}.${Math.trunc(value)}.${token}`)
  */
 export async function GET(request: Request) {
   return handle(request);
@@ -25,6 +29,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   return handle(request);
+}
+
+function md5(text: string) {
+  return createHash("md5").update(text).digest("hex");
 }
 
 async function handle(request: Request) {
@@ -45,24 +53,55 @@ async function handle(request: Request) {
     const q = (k: string) =>
       url.searchParams.get(k) || body[k] || body[k.toLowerCase()] || "";
 
-    const secret = q("secret") || q("key") || q("token");
-    const settings = await (async () => {
-      await connectDB();
-      return getSiteSettings();
-    })();
-    const expected =
-      process.env.OFFERWALL_SECRET?.trim() ||
-      (settings as { offerwallSecret?: string }).offerwallSecret ||
-      "";
+    await connectDB();
+    const settings = await getSiteSettings();
+    const settingsSecret =
+      (settings as { offerwallSecret?: string }).offerwallSecret || "";
+    const offerwallSecret =
+      process.env.OFFERWALL_SECRET?.trim() || settingsSecret;
+    const pubscaleSecret =
+      process.env.PUBSCALE_SECRET?.trim() || offerwallSecret;
 
-    if (!expected || secret !== expected) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const uid = (
+      q("uid") ||
+      q("user_id") ||
+      q("userId") ||
+      q("user") ||
+      q("playerid") ||
+      q("player_id") ||
+      ""
+    ).trim();
+    const valueRaw = q("coins") || q("amount") || q("value") || "0";
+    const coins = Math.max(0, Math.round(Number(valueRaw)));
+    const txid = (
+      q("txid") ||
+      q("transaction_id") ||
+      q("trans_id") ||
+      q("token") ||
+      ""
+    ).trim();
+    const offerName = (
+      q("offer") ||
+      q("offer_name") ||
+      q("goal_name") ||
+      "Offerwall"
+    ).trim();
+    const signature = (q("signature") || q("verifier") || "").trim();
+    const sharedSecret = (q("secret") || q("key") || "").trim();
+
+    let authorized = false;
+    if (signature && pubscaleSecret) {
+      // PubScale: md5(secret.user_id.trunc(value).token)
+      const template = `${pubscaleSecret}.${uid}.${Math.trunc(Number(valueRaw))}.${txid}`;
+      authorized = md5(template) === signature.toLowerCase();
+    } else if (offerwallSecret && sharedSecret) {
+      // AdGem / generic shared-secret query param
+      authorized = sharedSecret === offerwallSecret;
     }
 
-    const uid = q("uid") || q("userId") || q("user");
-    const coins = Math.max(0, Math.round(Number(q("coins") || q("amount") || 0)));
-    const txid = (q("txid") || q("transaction_id") || q("trans_id") || "").trim();
-    const offerName = (q("offer") || q("offer_name") || "Offerwall").trim();
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     if (!uid || !mongoose.Types.ObjectId.isValid(uid) || coins < 1) {
       return NextResponse.json({ error: "Invalid params" }, { status: 400 });
@@ -70,8 +109,6 @@ async function handle(request: Request) {
     if (!txid) {
       return NextResponse.json({ error: "txid required" }, { status: 400 });
     }
-
-    await connectDB();
 
     const offerId = `wall:${txid}`;
     try {
