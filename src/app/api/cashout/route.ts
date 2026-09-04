@@ -8,7 +8,7 @@ import { publishActivity } from "@/lib/activity-store";
 import { toPublicUser } from "@/lib/user-public";
 import { isProfileComplete, missingProfileLabels } from "@/lib/profile-complete";
 import { getSiteSettings } from "@/lib/models/SiteSettings";
-import { coinsToUsd, usdToCoins } from "@/lib/economy";
+import { usdToCoins } from "@/lib/economy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

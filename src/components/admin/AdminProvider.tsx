@@ -307,12 +307,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     window.localStorage.removeItem(ADMIN_SECRET_KEY);
     setSecret("");
     setAuthed(false);
     setGateMsg(session ? "secret" : "login");
-  };
+  }, [session]);
 
   const value = useMemo(
     () => ({
@@ -349,6 +349,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       loadCore,
       patchSettings,
       api,
+      logout,
     ],
   );
 

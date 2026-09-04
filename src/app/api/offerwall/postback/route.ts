@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 async function handle(request: Request) {
   try {
     const url = new URL(request.url);
-    let body: Record<string, string> = {};
+    const body: Record<string, string> = {};
     if (request.method === "POST") {
       try {
         const j = (await request.json()) as Record<string, unknown>;

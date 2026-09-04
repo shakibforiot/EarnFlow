@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/lib/models/User";
 import { toPublicUser } from "@/lib/user-public";

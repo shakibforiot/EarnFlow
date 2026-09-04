@@ -142,6 +142,8 @@ export default function ProfilePage() {
     } catch {
       /* ignore */
     }
+    // Mount-only: load once from session; loadProfile is stable for this page lifecycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   function applyUser(next: SessionUser) {
