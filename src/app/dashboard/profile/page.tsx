@@ -638,12 +638,16 @@ export default function ProfilePage() {
   const xpBar = xpProgress(user.xp ?? 0);
   const securityScore = [
     verified,
-    Boolean(user.twoFactorEnabled),
     Boolean(user.phone),
     user.kycStatus === "pending" || user.kycStatus === "verified",
-    Boolean(user.paypalEmail || user.cryptoAddress || user.bkashNumber || user.nagadNumber),
+    Boolean(
+      user.paypalEmail ||
+        user.cryptoAddress ||
+        user.bkashNumber ||
+        user.nagadNumber,
+    ),
   ].filter(Boolean).length;
-  const securityMax = 5;
+  const securityMax = 4;
   const securityPct = Math.round((securityScore / securityMax) * 100);
   const scorePct = Math.round((score / Math.max(1, scoreMax)) * 100);
 
@@ -998,9 +1002,6 @@ export default function ProfilePage() {
                   <ul className="space-y-1 text-xs text-slate-400">
                     <li className={verified ? "text-emerald-300" : ""}>
                       Email {verified ? "✓" : "—"}
-                    </li>
-                    <li className={user.twoFactorEnabled ? "text-emerald-300" : ""}>
-                      2FA {user.twoFactorEnabled ? "✓" : "optional"}
                     </li>
                     <li className={user.phone ? "text-emerald-300" : ""}>
                       Phone {user.phone ? "✓" : "—"}
@@ -1533,38 +1534,6 @@ export default function ProfilePage() {
                 verification.
               </p>
             )}
-          </section>
-
-          <section className="rounded-2xl border border-white/10 bg-ink-900/60 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-bold text-white">Two-factor auth</h2>
-                <p className="mt-1 text-sm text-slate-400">
-                  Extra login protection for your rewards account.
-                </p>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={twoFactorEnabled}
-                  onChange={(e) => setTwoFactorEnabled(e.target.checked)}
-                  className="h-4 w-4 rounded border-white/20 bg-ink-950 text-cyan-400"
-                />
-                Enable 2FA
-              </label>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              className="mt-4"
-              disabled={saving}
-              onClick={(e) => {
-                e.preventDefault();
-                void saveSettings(e as unknown as FormEvent);
-              }}
-            >
-              Save 2FA preference
-            </Button>
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-ink-900/60 p-5">

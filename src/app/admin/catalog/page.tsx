@@ -122,6 +122,22 @@ export default function AdminCatalogPage() {
             >
               Add
             </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || !(draft.offers || []).length}
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    "Remove ALL catalog offers and surveys? Partner walls are not affected.",
+                  )
+                )
+                  return;
+                void patchSettings({ offers: [] as never, surveys: [] as never });
+              }}
+            >
+              Clear all catalog
+            </Button>
           </div>
 
           <ul className="mt-4 max-h-72 space-y-1 overflow-y-auto">

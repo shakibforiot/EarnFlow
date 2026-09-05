@@ -53,7 +53,7 @@ const faq = [
   },
   {
     q: "How do I cash out?",
-    a: "Reach the minimum balance, add PayPal or crypto, then submit a cash out from your dashboard.",
+    a: "Reach the minimum balance, add PayPal, bKash, Nagad, or crypto, then submit a cash out from your dashboard.",
   },
   {
     q: "Why do I need KYC / email?",
