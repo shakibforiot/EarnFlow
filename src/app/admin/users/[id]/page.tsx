@@ -18,6 +18,18 @@ export default function AdminUserDetailPage() {
   const [sameIpUsers, setSameIpUsers] = useState<AdminUser[]>([]);
   const [sameIpCount, setSameIpCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [wallHistory, setWallHistory] = useState<{
+    summary: {
+      creditCount: number;
+      chargebackCount: number;
+      creditedCoins: number;
+      reversedCoins: number;
+      netCoins: number;
+      risk: string;
+    };
+    chargebacks: { txid: string; coins: number; at: string }[];
+    credits: { txid: string; coins: number; at: string }[];
+  } | null>(null);
 
   const load = useCallback(async () => {
     if (!userId) return;
@@ -26,15 +38,18 @@ export default function AdminUserDetailPage() {
       user?: AdminUser;
       sameIpUsers?: AdminUser[];
       sameIpCount?: number;
+      wallHistory?: typeof wallHistory;
       error?: string;
     }>(`/api/admin/users?id=${encodeURIComponent(userId)}`);
     if (!res.ok || !res.data.user) {
       setError(res.data.error || "User not found");
       setUser(null);
+      setWallHistory(null);
     } else {
       setUser(res.data.user);
       setSameIpUsers(res.data.sameIpUsers ?? []);
       setSameIpCount(res.data.sameIpCount ?? 0);
+      setWallHistory(res.data.wallHistory ?? null);
     }
     setLoading(false);
   }, [api, userId, setError]);
@@ -252,6 +267,8 @@ export default function AdminUserDetailPage() {
                 <p>Country: {user.country || "—"}</p>
                 <p>Phone: {user.phone || "—"}</p>
                 <p>PayPal: {user.paypalEmail || "—"}</p>
+                <p>bKash: {user.bkashNumber || "—"}</p>
+                <p>Nagad: {user.nagadNumber || "—"}</p>
                 <p className="truncate">Crypto: {user.cryptoAddress || "—"}</p>
                 <p>Member: {ago(user.memberSince)}</p>
                 <p>Last login: {ago(user.lastLoginAt)}</p>
@@ -301,6 +318,49 @@ export default function AdminUserDetailPage() {
                 </div>
               )}
 
+              {wallHistory && (
+                <div>
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Offerwall / fraud
+                  </p>
+                  <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <MiniStat
+                      label="Credits"
+                      value={String(wallHistory.summary.creditCount)}
+                    />
+                    <MiniStat
+                      label="Chargebacks"
+                      value={String(wallHistory.summary.chargebackCount)}
+                    />
+                    <MiniStat
+                      label="Net"
+                      value={formatCoins(wallHistory.summary.netCoins)}
+                    />
+                    <MiniStat
+                      label="Risk"
+                      value={wallHistory.summary.risk}
+                    />
+                  </div>
+                  {wallHistory.chargebacks.length > 0 && (
+                    <ul className="max-h-40 space-y-1 overflow-y-auto text-xs">
+                      {wallHistory.chargebacks.map((c) => (
+                        <li
+                          key={c.txid + String(c.at)}
+                          className="flex justify-between rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1.5"
+                        >
+                          <span className="truncate text-slate-400">
+                            {c.txid.slice(0, 14)}…
+                          </span>
+                          <span className="text-red-300">
+                            −{formatCoins(c.coins)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               <Block title="Verification">
                 <Tiny onClick={() => void action("verifyEmail")}>
                   Verify email
@@ -323,7 +383,7 @@ export default function AdminUserDetailPage() {
                       ["email", "Email verify"],
                       ["country", "Country"],
                       ["phone", "Phone"],
-                      ["payout", "PayPal / crypto"],
+                      ["payout", "Payout methods"],
                       ["kyc", "KYC"],
                     ] as const
                   ).map(([field, label]) => {

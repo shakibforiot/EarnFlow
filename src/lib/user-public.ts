@@ -16,6 +16,8 @@ export type PublicUser = {
   phone: string;
   paypalEmail: string;
   cryptoAddress: string;
+  bkashNumber: string;
+  nagadNumber: string;
   preferredCashout: string;
   twoFactorEnabled: boolean;
   kycStatus: "none" | "pending" | "verified" | "rejected";
@@ -86,6 +88,8 @@ export function toPublicUser(
     phone: user.phone ?? "",
     paypalEmail: user.paypalEmail ?? "",
     cryptoAddress: user.cryptoAddress ?? "",
+    bkashNumber: user.bkashNumber ?? "",
+    nagadNumber: user.nagadNumber ?? "",
     preferredCashout: user.preferredCashout ?? "PayPal",
     twoFactorEnabled: Boolean(user.twoFactorEnabled),
     kycStatus: user.kycStatus ?? "none",

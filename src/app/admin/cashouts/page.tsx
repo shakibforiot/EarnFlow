@@ -18,6 +18,7 @@ type CashoutRow = {
   coins: number;
   status: string;
   giftCode?: string | null;
+  destination?: string | null;
   createdAt: string;
   signupIp?: string;
   lastIp?: string;
@@ -170,6 +171,11 @@ export default function AdminCashoutsPage() {
                       {c.method} · {formatUsd(c.amountUsd)} ·{" "}
                       {formatCoins(c.coins)} coins · {ago(c.createdAt)}
                     </p>
+                    {c.destination ? (
+                      <p className="mt-1 font-mono text-[11px] text-cyan-200/90">
+                        To: {c.destination}
+                      </p>
+                    ) : null}
                     {c.giftCode && (
                       <p className="mt-1 font-mono text-[11px] text-emerald-300">
                         Code: {c.giftCode}

@@ -21,6 +21,8 @@ export type UserDocument = {
   phone: string;
   paypalEmail: string;
   cryptoAddress: string;
+  bkashNumber: string;
+  nagadNumber: string;
   preferredCashout: string;
   twoFactorEnabled: boolean;
   kycStatus: "none" | "pending" | "verified" | "rejected";
@@ -81,6 +83,8 @@ const UserSchema = new Schema<UserDocument>(
     phone: { type: String, default: "", trim: true },
     paypalEmail: { type: String, default: "", trim: true, lowercase: true },
     cryptoAddress: { type: String, default: "", trim: true },
+    bkashNumber: { type: String, default: "", trim: true },
+    nagadNumber: { type: String, default: "", trim: true },
     preferredCashout: { type: String, default: "PayPal", trim: true },
     twoFactorEnabled: { type: Boolean, default: false },
     kycStatus: {

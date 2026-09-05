@@ -1,4 +1,5 @@
 import type { SessionUser } from "@/lib/session";
+import { hasPayoutMethod } from "@/lib/offerwall";
 
 export type CompletenessItem = {
   key: string;
@@ -12,6 +13,8 @@ type CompletenessUser = {
   country?: string;
   paypalEmail?: string;
   cryptoAddress?: string;
+  bkashNumber?: string;
+  nagadNumber?: string;
   phone?: string;
   kycStatus?: string;
 };
@@ -34,8 +37,8 @@ export function getCompletenessItems(
     },
     {
       key: "payout",
-      label: "Add PayPal or crypto wallet",
-      done: Boolean(user?.paypalEmail?.trim() || user?.cryptoAddress?.trim()),
+      label: "Add PayPal, crypto, bKash, or Nagad",
+      done: hasPayoutMethod(user || {}),
       href: "/dashboard/profile",
     },
     {

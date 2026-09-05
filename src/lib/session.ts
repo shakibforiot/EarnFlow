@@ -14,6 +14,8 @@ export type SessionUser = {
   phone?: string;
   paypalEmail?: string;
   cryptoAddress?: string;
+  bkashNumber?: string;
+  nagadNumber?: string;
   preferredCashout?: string;
   twoFactorEnabled?: boolean;
   kycStatus?: "none" | "pending" | "verified" | "rejected";

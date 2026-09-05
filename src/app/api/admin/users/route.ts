@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { User } from "@/lib/models/User";
+import { OfferCompletion } from "@/lib/models/OfferCompletion";
 import { toAdminUser } from "@/lib/admin-user";
 import { assertAdminAccess } from "@/lib/admin-auth";
 import type { UnlockableField } from "@/lib/profile-locks";
@@ -58,12 +59,56 @@ export async function GET(request: Request) {
       const allOnIp = await User.countDocuments({
         $or: [{ signupIp: ip }, { lastIp: ip }],
       });
+      const wallRows = await OfferCompletion.find({
+        userId: id,
+        offerId: { $regex: /^wall:/ },
+      })
+        .sort({ createdAt: -1 })
+        .limit(50)
+        .lean();
+      const credits = wallRows.filter(
+        (r) => !String(r.offerId).startsWith("wall:chargeback:"),
+      );
+      const chargebacks = wallRows.filter((r) =>
+        String(r.offerId).startsWith("wall:chargeback:"),
+      );
+      const creditedCoins = credits.reduce((s, r) => s + (r.coins || 0), 0);
+      const reversedCoins = chargebacks.reduce(
+        (s, r) => s + Math.abs(r.coins || 0),
+        0,
+      );
       return NextResponse.json({
         user,
         users: [user],
         sameIpUsers: related,
         sameIpCount: allOnIp,
         sameIp: ip,
+        wallHistory: {
+          credits: credits.slice(0, 20).map((r) => ({
+            txid: String(r.offerId).replace(/^wall:/, ""),
+            coins: r.coins ?? 0,
+            at: r.createdAt,
+          })),
+          chargebacks: chargebacks.slice(0, 20).map((r) => ({
+            txid: String(r.offerId).replace(/^wall:chargeback:/, ""),
+            coins: Math.abs(r.coins || 0),
+            at: r.createdAt,
+          })),
+          summary: {
+            creditCount: credits.length,
+            chargebackCount: chargebacks.length,
+            creditedCoins,
+            reversedCoins,
+            netCoins: creditedCoins - reversedCoins,
+            risk:
+              chargebacks.length >= 3 ||
+              (creditedCoins > 0 && reversedCoins / creditedCoins >= 0.4)
+                ? "high"
+                : chargebacks.length >= 1
+                  ? "medium"
+                  : "low",
+          },
+        },
       });
     }
 
@@ -299,6 +344,8 @@ export async function PATCH(request: Request) {
             if (f === "payout") {
               user.paypalEmail = "";
               user.cryptoAddress = "";
+              user.bkashNumber = "";
+              user.nagadNumber = "";
             }
             if (f === "kyc") {
               user.kycStatus = "none";

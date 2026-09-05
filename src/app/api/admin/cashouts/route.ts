@@ -49,6 +49,7 @@ export async function GET(request: Request) {
           email: u?.email || "",
           name: u?.name || "",
           method: r.methodName,
+          destination: r.destination || null,
           amountUsd: r.amountUsd,
           coins: r.coins,
           status: r.status,

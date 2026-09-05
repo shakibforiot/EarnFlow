@@ -65,6 +65,8 @@ export const dailyTasks: DailyTask[] = [
 
 export const cashMethods: CashMethod[] = [
   { id: "cm1", name: "PayPal", min: "$5.00", fee: "Free" },
+  { id: "cm-bkash", name: "bKash", min: "$5.00", fee: "Free" },
+  { id: "cm-nagad", name: "Nagad", min: "$5.00", fee: "Free" },
   { id: "cm2", name: "Visa", min: "$10.00", fee: "Free" },
   { id: "cm3", name: "Bitcoin", min: "$3.00", fee: "Network" },
   { id: "cm4", name: "Ethereum", min: "$5.00", fee: "Network" },

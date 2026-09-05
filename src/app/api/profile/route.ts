@@ -122,7 +122,12 @@ export async function GET(request: Request) {
     const profileScore = [
       publicUser.emailVerified,
       Boolean(publicUser.country),
-      Boolean(publicUser.paypalEmail || publicUser.cryptoAddress),
+      Boolean(
+        publicUser.paypalEmail ||
+          publicUser.cryptoAddress ||
+          publicUser.bkashNumber ||
+          publicUser.nagadNumber,
+      ),
       Boolean(publicUser.phone),
       publicUser.kycStatus === "verified" || publicUser.kycStatus === "pending",
     ].filter(Boolean).length;
@@ -186,6 +191,8 @@ export async function PATCH(request: Request) {
       phone?: string;
       paypalEmail?: string;
       cryptoAddress?: string;
+      bkashNumber?: string;
+      nagadNumber?: string;
       preferredCashout?: string;
       twoFactorEnabled?: boolean;
       kycStatus?: "none" | "pending" | "verified" | "rejected";
@@ -271,7 +278,12 @@ export async function PATCH(request: Request) {
         }
       }
     }
-    if (typeof body.paypalEmail === "string" || typeof body.cryptoAddress === "string") {
+    if (
+      typeof body.paypalEmail === "string" ||
+      typeof body.cryptoAddress === "string" ||
+      typeof body.bkashNumber === "string" ||
+      typeof body.nagadNumber === "string"
+    ) {
       const nextPaypal =
         typeof body.paypalEmail === "string"
           ? body.paypalEmail.trim().toLowerCase().slice(0, 120)
@@ -280,10 +292,34 @@ export async function PATCH(request: Request) {
         typeof body.cryptoAddress === "string"
           ? body.cryptoAddress.trim().slice(0, 120)
           : user.cryptoAddress;
+      const nextBkash =
+        typeof body.bkashNumber === "string"
+          ? body.bkashNumber.replace(/[\s-]/g, "").trim().slice(0, 20)
+          : user.bkashNumber;
+      const nextNagad =
+        typeof body.nagadNumber === "string"
+          ? body.nagadNumber.replace(/[\s-]/g, "").trim().slice(0, 20)
+          : user.nagadNumber;
+
+      if (
+        (typeof body.bkashNumber === "string" &&
+          nextBkash &&
+          !/^01[3-9]\d{8}$/.test(nextBkash)) ||
+        (typeof body.nagadNumber === "string" &&
+          nextNagad &&
+          !/^01[3-9]\d{8}$/.test(nextNagad))
+      ) {
+        return NextResponse.json(
+          { error: "bKash/Nagad must be a valid BD number (01XXXXXXXXX)." },
+          { status: 400 },
+        );
+      }
 
       const payoutChanged =
         nextPaypal !== (user.paypalEmail ?? "") ||
-        nextCrypto !== (user.cryptoAddress ?? "");
+        nextCrypto !== (user.cryptoAddress ?? "") ||
+        nextBkash !== (user.bkashNumber ?? "") ||
+        nextNagad !== (user.nagadNumber ?? "");
 
       if (isFieldLocked(user, "payout") && payoutChanged) {
         return NextResponse.json(
@@ -299,6 +335,8 @@ export async function PATCH(request: Request) {
 
       if (typeof body.paypalEmail === "string") user.paypalEmail = nextPaypal;
       if (typeof body.cryptoAddress === "string") user.cryptoAddress = nextCrypto;
+      if (typeof body.bkashNumber === "string") user.bkashNumber = nextBkash;
+      if (typeof body.nagadNumber === "string") user.nagadNumber = nextNagad;
       if (payoutChanged && user.adminUnlocks?.payout) {
         user.adminUnlocks = clearUnlockAfterEdit(user.adminUnlocks, "payout");
         user.markModified("adminUnlocks");

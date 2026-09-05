@@ -7,6 +7,7 @@ export type CashoutRequestDocument = {
   userId: mongoose.Types.ObjectId;
   method: string;
   methodName: string;
+  destination?: string | null;
   amountUsd: number;
   coins: number;
   status: CashoutStatus;
@@ -26,6 +27,7 @@ const CashoutRequestSchema = new Schema<CashoutRequestDocument>(
     },
     method: { type: String, required: true },
     methodName: { type: String, required: true },
+    destination: { type: String, default: null },
     amountUsd: { type: Number, required: true, min: 0 },
     coins: { type: Number, required: true, min: 1 },
     status: {

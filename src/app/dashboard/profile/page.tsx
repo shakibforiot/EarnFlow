@@ -100,6 +100,8 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [paypalEmail, setPaypalEmail] = useState("");
   const [cryptoAddress, setCryptoAddress] = useState("");
+  const [bkashNumber, setBkashNumber] = useState("");
+  const [nagadNumber, setNagadNumber] = useState("");
   const [preferredCashout, setPreferredCashout] = useState("PayPal");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [notifyOffers, setNotifyOffers] = useState(true);
@@ -156,6 +158,8 @@ export default function ProfilePage() {
     setPhone(next.phone ?? "");
     setPaypalEmail(next.paypalEmail ?? "");
     setCryptoAddress(next.cryptoAddress ?? "");
+    setBkashNumber(next.bkashNumber ?? "");
+    setNagadNumber(next.nagadNumber ?? "");
     setPreferredCashout(next.preferredCashout ?? "PayPal");
     setTwoFactorEnabled(next.twoFactorEnabled ?? false);
     setNotifyOffers(next.notifyOffers ?? true);
@@ -298,6 +302,8 @@ export default function ProfilePage() {
           phone,
           paypalEmail,
           cryptoAddress,
+          bkashNumber,
+          nagadNumber,
           preferredCashout,
           twoFactorEnabled,
           notifyOffers,
@@ -635,7 +641,7 @@ export default function ProfilePage() {
     Boolean(user.twoFactorEnabled),
     Boolean(user.phone),
     user.kycStatus === "pending" || user.kycStatus === "verified",
-    Boolean(user.paypalEmail || user.cryptoAddress),
+    Boolean(user.paypalEmail || user.cryptoAddress || user.bkashNumber || user.nagadNumber),
   ].filter(Boolean).length;
   const securityMax = 5;
   const securityPct = Math.round((securityScore / securityMax) * 100);
@@ -915,7 +921,11 @@ export default function ProfilePage() {
             >
               <p className="text-xs text-slate-400">Payout readiness</p>
               <p className="mt-1 text-sm font-semibold text-white">
-                {verified && (user.paypalEmail || user.cryptoAddress)
+                {verified &&
+                (user.paypalEmail ||
+                  user.cryptoAddress ||
+                  user.bkashNumber ||
+                  user.nagadNumber)
                   ? "Ready to request"
                   : "Finish email + payout method"}
               </p>
@@ -1782,7 +1792,7 @@ export default function ProfilePage() {
               onChange={(e) => setPreferredCashout(e.target.value)}
               className="h-11 w-full rounded-xl border border-white/10 bg-ink-950/60 px-3.5 text-sm text-white outline-none focus:border-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {["PayPal", "Visa", "Bitcoin", "Ethereum", "Litecoin", "Amazon", "Bank Transfer"].map(
+              {["PayPal", "bKash", "Nagad", "Visa", "Bitcoin", "Ethereum", "Litecoin", "Amazon", "Bank Transfer"].map(
                 (m) => (
                   <option key={m} value={m}>
                     {m}
@@ -1802,6 +1812,32 @@ export default function ProfilePage() {
               disabled={payoutLocked}
               onChange={(e) => setPaypalEmail(e.target.value)}
               placeholder="paypal@email.com"
+              className="h-11 w-full rounded-xl border border-white/10 bg-ink-950/60 px-3.5 text-sm text-white outline-none focus:border-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs text-slate-400">
+              bKash number {payoutLocked ? "(locked)" : ""}
+            </span>
+            <input
+              value={bkashNumber}
+              disabled={payoutLocked}
+              onChange={(e) => setBkashNumber(e.target.value)}
+              placeholder="01XXXXXXXXX"
+              inputMode="numeric"
+              className="h-11 w-full rounded-xl border border-white/10 bg-ink-950/60 px-3.5 text-sm text-white outline-none focus:border-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs text-slate-400">
+              Nagad number {payoutLocked ? "(locked)" : ""}
+            </span>
+            <input
+              value={nagadNumber}
+              disabled={payoutLocked}
+              onChange={(e) => setNagadNumber(e.target.value)}
+              placeholder="01XXXXXXXXX"
+              inputMode="numeric"
               className="h-11 w-full rounded-xl border border-white/10 bg-ink-950/60 px-3.5 text-sm text-white outline-none focus:border-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-60"
             />
           </label>

@@ -115,6 +115,19 @@ async function handle(request: Request) {
 
     const deducted = Math.min(user.balance, coins);
     user.balance = Math.max(0, user.balance - coins);
+
+    // Auto-restrict after repeated chargebacks
+    const prior = await OfferCompletion.countDocuments({
+      userId: uid,
+      offerId: { $regex: /^wall:chargeback:/ },
+    });
+    if (prior >= 3 && user.accountStatus === "active") {
+      user.accountStatus = "restricted";
+      user.banReason =
+        user.banReason ||
+        "Restricted automatically after multiple offer chargebacks.";
+    }
+
     await user.save();
 
     await Activity.create({

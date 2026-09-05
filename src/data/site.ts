@@ -4,6 +4,8 @@ export type StreakDay = { day: number; reward: string; highlight?: boolean };
 /** Real payout methods shown on the landing page */
 export const cashoutOptions: CashoutOption[] = [
   { id: "c1", name: "PayPal" },
+  { id: "c-bkash", name: "bKash" },
+  { id: "c-nagad", name: "Nagad" },
   { id: "c2", name: "Visa" },
   { id: "c3", name: "Apple" },
   { id: "c4", name: "Amazon" },

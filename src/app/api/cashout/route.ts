@@ -9,9 +9,40 @@ import { toPublicUser } from "@/lib/user-public";
 import { isProfileComplete, missingProfileLabels } from "@/lib/profile-complete";
 import { getSiteSettings } from "@/lib/models/SiteSettings";
 import { usdToCoins } from "@/lib/economy";
+import { hasPayoutMethod } from "@/lib/offerwall";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function destinationForMethod(
+  methodName: string,
+  user: {
+    paypalEmail?: string;
+    cryptoAddress?: string;
+    bkashNumber?: string;
+    nagadNumber?: string;
+  },
+) {
+  const name = methodName.toLowerCase();
+  if (name.includes("bkash")) return user.bkashNumber || "";
+  if (name.includes("nagad")) return user.nagadNumber || "";
+  if (name.includes("paypal")) return user.paypalEmail || "";
+  if (
+    name.includes("bitcoin") ||
+    name.includes("ethereum") ||
+    name.includes("litecoin") ||
+    name.includes("crypto")
+  ) {
+    return user.cryptoAddress || "";
+  }
+  return (
+    user.paypalEmail ||
+    user.bkashNumber ||
+    user.nagadNumber ||
+    user.cryptoAddress ||
+    ""
+  );
+}
 
 export async function POST(request: Request) {
   try {
@@ -82,12 +113,41 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!hasPayoutMethod(user)) {
+      return NextResponse.json(
+        { error: "Add a payout method in Profile first." },
+        { status: 400 },
+      );
+    }
+
+    const lower = (methodName || method).toLowerCase();
+    if (lower.includes("bkash") && !user.bkashNumber?.trim()) {
+      return NextResponse.json(
+        { error: "Add your bKash number in Profile → Payouts." },
+        { status: 400 },
+      );
+    }
+    if (lower.includes("nagad") && !user.nagadNumber?.trim()) {
+      return NextResponse.json(
+        { error: "Add your Nagad number in Profile → Payouts." },
+        { status: 400 },
+      );
+    }
+    if (lower.includes("paypal") && !user.paypalEmail?.trim()) {
+      return NextResponse.json(
+        { error: "Add your PayPal email in Profile → Payouts." },
+        { status: 400 },
+      );
+    }
+
     if (user.balance < coins) {
       return NextResponse.json(
         { error: "Insufficient balance" },
         { status: 400 },
       );
     }
+
+    const destination = destinationForMethod(methodName || method, user);
 
     user.balance -= coins;
     await user.save();
@@ -96,6 +156,7 @@ export async function POST(request: Request) {
       userId: user._id,
       method,
       methodName,
+      destination: destination || null,
       amountUsd,
       coins,
       status: "pending",
@@ -127,6 +188,7 @@ export async function POST(request: Request) {
       cashout: {
         id: cashout._id.toString(),
         method: cashout.methodName,
+        destination: cashout.destination,
         amountUsd: cashout.amountUsd,
         coins: cashout.coins,
         status: cashout.status,
