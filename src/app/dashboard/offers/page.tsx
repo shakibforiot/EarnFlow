@@ -37,6 +37,11 @@ export default function OffersPage() {
     { txid: string; coins: number; at: string }[]
   >([]);
   const [busyProvider, setBusyProvider] = useState<string | null>(null);
+  const [embed, setEmbed] = useState<{
+    provider: Provider;
+    url: string;
+  } | null>(null);
+  const [setupTips, setSetupTips] = useState<string[]>([]);
 
   useEffect(() => {
     const session = getSession();
@@ -63,24 +68,39 @@ export default function OffersPage() {
         setChargebacks(data.chargebacks ?? []);
       })
       .catch(() => undefined);
+
+    void fetch("/api/offerwall/status", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => setSetupTips(data.tips ?? []))
+      .catch(() => undefined);
   }, []);
 
-  async function openWall(provider: Provider) {
+  async function resolveUrl(provider: Provider) {
     const session = getSession();
-    if (!session) return;
+    if (!session) return null;
+    const res = await fetch("/api/offerwall/launch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: session.id, provider: provider.id }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.url) {
+      window.alert(data.error || "Offerwall not configured yet.");
+      return null;
+    }
+    return data.url as string;
+  }
+
+  async function openWall(provider: Provider, mode: "tab" | "embed") {
     setBusyProvider(provider.id);
     try {
-      const res = await fetch("/api/offerwall/launch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: session.id, provider: provider.id }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        window.alert(data.error || "Offerwall not configured yet.");
-        return;
+      const url = await resolveUrl(provider);
+      if (!url) return;
+      if (mode === "embed") {
+        setEmbed({ provider, url });
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
       }
-      window.open(data.url, "_blank", "noopener,noreferrer");
     } catch {
       window.alert("Could not open offerwall.");
     } finally {
@@ -123,19 +143,24 @@ export default function OffersPage() {
                   {p.enabled ? "Ready" : "Setup"}
                 </span>
               </div>
-              <Button
-                className="mt-4"
-                variant="primary"
-                size="sm"
-                disabled={busyProvider === p.id}
-                onClick={() => void openWall(p)}
-              >
-                {busyProvider === p.id
-                  ? "Opening…"
-                  : p.enabled
-                    ? "Open offerwall"
-                    : "Configure in env"}
-              </Button>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={busyProvider === p.id}
+                  onClick={() => void openWall(p, "embed")}
+                >
+                  {busyProvider === p.id ? "Loading…" : "Embed here"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={busyProvider === p.id}
+                  onClick={() => void openWall(p, "tab")}
+                >
+                  Open tab
+                </Button>
+              </div>
             </article>
           ))}
         </div>
@@ -145,7 +170,48 @@ export default function OffersPage() {
             description="AdGem / PubScale walls appear here when the API responds."
           />
         )}
+        {setupTips.length > 0 && providers.some((p) => !p.enabled) && (
+          <ul className="mt-3 space-y-1 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100/90">
+            {setupTips.map((t) => (
+              <li key={t}>• {t}</li>
+            ))}
+          </ul>
+        )}
       </section>
+
+      {embed && (
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <SectionHeader title={`${embed.provider.name} · embedded`} />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() =>
+                  window.open(embed.url, "_blank", "noopener,noreferrer")
+                }
+              >
+                New tab
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setEmbed(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink-950">
+            <iframe
+              title={embed.provider.name}
+              src={embed.url}
+              className="h-[70vh] min-h-[420px] w-full bg-white"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <p className="text-[11px] text-slate-500">
+            Some partners block iframes — use Open tab if the frame stays blank.
+          </p>
+        </section>
+      )}
 
       {summary && (
         <section className="rounded-2xl border border-white/10 bg-ink-900/60 p-4">

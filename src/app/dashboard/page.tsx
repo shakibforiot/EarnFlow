@@ -335,6 +335,12 @@ export default function DashboardHomePage() {
           >
             {streak.claimedToday ? "Claimed today" : "Claim streak"}
           </Button>
+          <Link
+            href="/dashboard/streak"
+            className="mt-3 block text-xs text-cyan-300/80 hover:text-cyan-200"
+          >
+            Open streak page →
+          </Link>
         </div>
 
         <div className="animate-fade-up rounded-3xl border border-white/10 bg-ink-900/70 p-5 lg:col-span-1">

@@ -28,6 +28,7 @@ const nav: NavItem[] = [
   { href: "/dashboard/leaderboard", label: "Ranks", icon: TrophyIcon },
   { href: "/dashboard/refer", label: "Refer", icon: ReferIcon },
   { href: "/dashboard/faucet", label: "Daily Free", icon: DropIcon },
+  { href: "/dashboard/streak", label: "Streak", icon: StreakIcon },
   { href: "/dashboard/profile", label: "Profile", icon: ProfileIcon },
 ];
 
@@ -43,6 +44,7 @@ const moreEarn = [
   { href: "/dashboard/surveys", label: "Surveys", hint: "Opinion", icon: SurveyIcon },
   { href: "/dashboard/games", label: "Games", hint: "Play & earn", icon: GameIcon },
   { href: "/dashboard/faucet", label: "Daily Free", hint: "Faucet", icon: DropIcon },
+  { href: "/dashboard/streak", label: "Streak", hint: "Daily bonus", icon: StreakIcon },
   { href: "/dashboard/redeem", label: "Redeem", hint: "Codes", icon: TicketIcon },
   { href: "/dashboard/cashout", label: "Cash Out", hint: "Withdraw", icon: CashIcon },
 ];
@@ -630,6 +632,18 @@ function DropIcon() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path d="M12 3s6 7 6 11a6 6 0 11-12 0c0-4 6-11 6-11z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function StreakIcon() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-4 2-5 1 2 2 2 3-1z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

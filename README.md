@@ -20,9 +20,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Configure `MONGODB_URI`, `ADMIN_EMAIL`, and `ADMIN_SECRET` in `.env.local`. See `.env.example` for optional mail / offerwall secrets.
 
-## Notes
-
-- Economy rate: **1000 coins = $1**
-- Admin panel: `/admin`
-- Dashboard: `/dashboard` (after sign in)
-- PubScale offerwall setup notes: [docs/PUBSCALE.md](docs/PUBSCALE.md)
+# Notes
+- Economy: 1000 coins = $1
+- Admin: `/admin`
+- Dashboard: `/dashboard`
+- Streak claim: `/dashboard/streak`
+- Offerwall status: `/api/offerwall/status`
+- Postback: `/api/offerwall/postback`
+- Chargeback: `/api/offerwall/chargeback`
+- PubScale setup notes: [docs/PUBSCALE.md](docs/PUBSCALE.md)

@@ -275,7 +275,102 @@ export default function AdminControlsPage() {
             </Button>
           </div>
         </section>
+
+        <OfferwallStatusCard />
       </div>
     </AdminShell>
+  );
+}
+
+function OfferwallStatusCard() {
+  const [status, setStatus] = useState<{
+    postback?: {
+      credit: string;
+      chargeback: string;
+      offerwallSecretSet: boolean;
+      pubscaleSecretSet: boolean;
+    };
+    providers?: { id: string; name: string; enabled: boolean; missing: string[] }[];
+    tips?: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    void fetch("/api/offerwall/status", { cache: "no-store" })
+      .then((r) => r.json())
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, []);
+
+  return (
+    <section className="rounded-2xl border border-white/10 bg-ink-900/60 p-4">
+      <h2 className="text-sm font-semibold text-white">Offerwall wiring</h2>
+      <p className="mt-1 text-xs text-slate-400">
+        Live check of AdGem / PubScale env (secrets not shown).
+      </p>
+      {!status ? (
+        <p className="mt-3 text-sm text-slate-500">Loading status…</p>
+      ) : (
+        <div className="mt-3 space-y-3 text-xs">
+          <div className="flex flex-wrap gap-2">
+            <span
+              className={`rounded-lg px-2 py-1 ${
+                status.postback?.offerwallSecretSet
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : "bg-amber-500/15 text-amber-200"
+              }`}
+            >
+              OFFERWALL_SECRET{" "}
+              {status.postback?.offerwallSecretSet ? "set" : "missing"}
+            </span>
+            <span
+              className={`rounded-lg px-2 py-1 ${
+                status.postback?.pubscaleSecretSet
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : "bg-amber-500/15 text-amber-200"
+              }`}
+            >
+              PUBSCALE_SECRET{" "}
+              {status.postback?.pubscaleSecretSet ? "set" : "missing"}
+            </span>
+          </div>
+          <ul className="space-y-1 text-slate-400">
+            <li>
+              Credit:{" "}
+              <code className="text-cyan-200/90">
+                {status.postback?.credit}
+              </code>
+            </li>
+            <li>
+              Chargeback:{" "}
+              <code className="text-cyan-200/90">
+                {status.postback?.chargeback}
+              </code>
+            </li>
+          </ul>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(status.providers || []).map((p) => (
+              <div
+                key={p.id}
+                className="rounded-xl border border-white/8 bg-ink-950/50 px-3 py-2"
+              >
+                <p className="font-medium text-white">{p.name}</p>
+                <p
+                  className={
+                    p.enabled ? "text-emerald-300" : "text-amber-200"
+                  }
+                >
+                  {p.enabled ? "Launch ready" : `Need: ${p.missing.join(", ")}`}
+                </p>
+              </div>
+            ))}
+          </div>
+          <ul className="space-y-1 text-slate-500">
+            {(status.tips || []).map((t) => (
+              <li key={t}>• {t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
